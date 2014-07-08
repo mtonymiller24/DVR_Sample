@@ -221,6 +221,10 @@ textarea:focus::-ms-input-placeholder { color:transparent; }
 
 $(document).ready(function(){
 	
+    // removing HTML5 features for backwards compatibility
+    if(!navigator.userAgent.match(/Chrome/g)) {
+       $("#dateInput, #startInput, #endInput").attr("type","text");
+    }
 	
     var currentDate = new Date();
 	$("#dateInput").val(getDate(currentDate.getTime()));
@@ -316,6 +320,11 @@ function deleteItem(item) {
 }
 
 function dateToTimestamp(date, time) {
+
+    //format change for FF/Safari/Opera/IE
+    date = date.split("-");
+    date = date[1] + "/" + date[2] + "/" + date[0];
+
     if (time !== null) {
         date += " " + time;
     }
