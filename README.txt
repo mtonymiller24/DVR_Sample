@@ -10,7 +10,5 @@ Validation
   -Schedule Conflicts
 
 
-Best if used in Chrome
-
 viewable at 
    http://mycampusbeer.com/dvr/
