@@ -1,0 +1,473 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>DVR Schedule</title>
+
+<style type="text/css">
+html {
+      background: #d3e3f5;
+}
+
+/* hide placeholder text when focused */
+input:focus::-webkit-input-placeholder { color:transparent; }
+input:focus::-moz-placeholder { color:transparent; }
+input:focus::-ms-input-placeholder { color:transparent; }
+textarea:focus::-webkit-input-placeholder { color:transparent; }
+textarea:focus::-moz-placeholder { color:transparent; }
+textarea:focus::-ms-input-placeholder { color:transparent; }
+
+#main {
+    text-align: center;
+}
+
+#dvrInput {
+    margin: 30px 0 20px 0;
+    position: relative;
+}
+        #dvrInput::after {
+            color: #ED2B3E;
+            position: absolute;
+            top: 23px;
+            margin-left: 10px;
+            text-shadow: 1px 1px 1px #999;
+        }
+        #dvrInput.error-invalid::after {
+            content: "Invalid end time!"; 
+        }
+        #dvrInput.error-date::after {
+            content: "Date must be valid yyyy-mm-dd"; 
+        }
+        #dvrInput.error-time::after {
+            content: "Start/End time must be valid HH:MM"; 
+        }
+        #dvrInput.error-past::after {
+            content: "Schedule in the past!"; 
+        }
+        #dvrInput.error-overlap::after {
+            content: "Schedule conflict!"; 
+        }
+
+
+
+  #dvrInput > div {
+    display: inline-block;
+    margin: 0 3px;
+  }
+    .dvrLabel {
+        display: block;
+        text-align: left;
+        padding-left: 3px;
+    }
+    #dvrInput input {
+        border: 1px solid #777;
+        border-radius: 3px;
+        padding: 2px 0 2px 6px;
+        box-shadow: 1px 1px 2px #aaa;
+        background: white;
+    }
+        #channelInput {
+            height: 19px;
+            position: relative;
+            top: 1px;
+        }
+    #dvrAdd {
+        position: relative;
+        border: 1px solid black;
+        border-radius: 5px;
+        background: #ED2B3E;
+        color: white;
+        text-align: center;
+        padding: 3px 9px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+        #dvrAdd.disabled {
+            opacity: 0.3;
+        }
+        
+        #dvrAdd:not(.disabled):hover {
+            cursor: pointer;
+            box-shadow: 2px 2px 4px #666;
+        }
+        #dvrAdd:not(.disabled):active {
+            box-shadow: none;
+            top: 2px;
+            left: 2px;
+        }
+
+        
+#dvrSchedule {
+    width: 530px;
+    margin: auto;
+}
+
+.scheduleHeader.dvrItem {
+    border-left: none;
+    border-right: none;
+    background: none;
+}
+        
+.dvrItem {
+    border: 1px solid #444;
+    border-top: none;
+    background: #f7f7f7;
+    padding: 6px 0;
+    position: relative;
+}
+  .itemContent {
+    display: inline-block;
+    width: 150px;
+  }
+  .itemDate {
+    
+  }
+  .itemTime {
+
+  }
+  .itemChannel {
+
+  }
+      .itemEdit {
+        background: url(edit.png) no-repeat scroll 0 0;
+        position: absolute;
+        height: 20px;
+        width: 20px;
+        cursor: pointer;
+        top: 6px;
+        right: 50px;
+        display: none;
+      }
+	  .itemDelete {
+	    background: url(delete.png) no-repeat scroll 0 0;
+	    position: absolute;
+	    height: 20px;
+	    width: 20px;
+	    cursor: pointer;
+	    top: 8px;
+        right: 20px;
+        display: none;
+	  }
+	    .dvrItem:hover .itemDelete,
+	    .dvrItem:hover .itemEdit {
+	       display: block;
+	    }
+	    
+	    
+	    .noItems {
+	       margin-top: 10px;
+	       font-style: italic;
+	    }
+</style>
+
+
+</head>
+<body>
+
+<div id="main">
+
+    <div id="dvrInput">
+        <div id="dvrDate">
+            <label class="dvrLabel" for="dateInput">Date</label>
+            <input type="date" name="dateInput" id="dateInput" placeholder="12/10/2014" />
+        </div>
+        <div id="dvrStart">
+            <label class="dvrLabel" for="timeInput">Start</label>
+            <input type="time" name="startInput" id="startInput" placeholder="6:00" />
+        </div>
+        <div id="dvrEnd">
+            <label class="dvrLabel" for="timeInput">End</label>
+            <input type="time" name="endInput" id="endInput" placeholder="6:00" />
+        </div>
+        <div id="dvrChannel">
+            <label class="dvrLabel" for="channelInput">Channel</label>
+            <input type="number" name="channelInput" id="channelInput" 
+                placeholder="562" min="1" max="999" maxlength="3" onkeypress="return isNumberKey(event)"/>
+        </div>
+        <div id="dvrAdd" class="disabled">
+            Add
+        </div>
+    </div>
+    
+    <div id="dvrSchedule">
+        <div class="scheduleHeader dvrItem">
+            <div class="itemDate itemContent">Date</div>
+            <div class="itemTime itemContent">Time</div>
+            <div class="itemChannel itemContent">Channel</div>
+        </div>
+        <div id="scheduleItems">
+            <div class="noItems">No scheduled recordings</div>
+        </div>
+    </div>
+  
+</div>
+
+<div id="itemTemplate" style="display:none;">
+  <div id="{{id}}" class="dvrItem" data-start="{{startTimestamp}}" data-end="{{endTimestamp}}">
+      <div class="itemDate itemContent">{{date}}</div>
+      <div class="itemTime itemContent">{{start}} - {{end}}</div>
+      <div class="itemChannel itemContent">{{channel}}</div>
+      <div class="itemEdit"></div>
+      <div class="itemDelete"></div>
+  </div>
+</div>
+
+
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<!-- <script type="text/javascript" src="http://requirejs.org/docs/release/2.1.14/minified/require.js"></script> -->
+<script type="text/javascript" src="mustache.js"></script>
+<script type="text/javascript">
+
+$(document).ready(function(){
+	
+	
+    var currentDate = new Date();
+	$("#dateInput").val(getDate(currentDate.getTime()));
+	
+	var start = getTime(currentDate.getTime());
+	$("#startInput").val(start);
+	
+	var end = currentDate;
+	if (end.getHours() === 23) {
+		end.setHours(23);
+		end.setMinutes(59);
+    } else {
+    	end.setHours(end.getHours()+1);
+    }
+	
+	$("#endInput").val(getTime(end.getTime()));
+	
+	//check handler for HTML5 up/down arrows
+	$("input").change(checkAdd).keyup(checkAdd);
+	
+	$("#dvrInput").on("click", "#dvrAdd:not(.disabled)", function(){
+		if (validInput()) {
+			
+			var date = $("#dateInput").val();
+			var start = $("#startInput").val();
+			var end = $("#endInput").val();
+			
+			var id = $(".dvrItem").length;
+			
+			var json = {
+					id: id,
+					date: date,
+					channel: $("#channelInput").val(),
+					start: militaryToPM(start),
+					end: militaryToPM(end),
+					startTimestamp: dateToTimestamp(date, start),
+					endTimestamp: dateToTimestamp(date, end)
+			};
+			
+			//ideally loaded with requireJS
+			var template = $("#itemTemplate").html();
+			var html = Mustache.to_html(template, json);
+			
+			if ($("#scheduleItems .dvrItem").length < 1) {
+	            $("#scheduleItems").empty();
+	        }
+			$("#scheduleItems").append(html);
+			
+			//sort by date
+			var items = $("#scheduleItems .dvrItem");
+            $("#scheduleItems").html(sortByDate(items));
+			
+            pulse($("#"+id));
+			
+		}
+	});
+	
+	$("#scheduleItems").on("click", ".itemEdit", function(e){
+		var par = $(this).parent();
+		
+	    var startDate = $(par).data("start");
+	    $("#dateInput").val(getDate(startDate));
+	    
+	    var start = getTime(startDate);
+	    $("#startInput").val(start);
+	    
+	    var end = $(par).data("end");
+	    $("#endInput").val(getTime(end));
+	    
+	    $("#channelInput").val($(".itemChannel", $(par)).html());
+		
+		deleteItem(par);
+
+        
+	});
+	$("#scheduleItems").on("click", ".itemDelete", function(e){
+	    deleteItem($(this).parent());
+	});
+	
+});
+
+function deleteItem(item) {
+	$(item).fadeOut("slow", function(){
+        $(this).remove();
+        
+        if ($("#scheduleItems .dvrItem").length < 1) {
+            $("#scheduleItems").html('<div class="noItems">No scheduled recordings</div>');
+        } else {
+        	var items = $("#scheduleItems .dvrItem");
+        	$("#scheduleItems").html(sortByDate(items));
+        }
+    }); 
+}
+
+function dateToTimestamp(date, time) {
+    if (time !== null) {
+        date += " " + time;
+    }
+    return new Date(date).getTime();
+}
+
+function timestampToDate(timestamp) {
+    var date = getDate(timestamp);
+    var time = getTime(timestamp);
+    
+    return date + " " + time;
+}
+
+function getTime(timestamp) {
+    var d = new Date(timestamp);
+    
+    var hour = String(d.getHours());
+    hour = hour.length > 1 ? hour : '0' + hour;
+    
+    var min = String(d.getMinutes());
+    min = min.length > 1 ? min : '0' + min;
+    
+    return hour + ":" + min;
+}
+
+function militaryToPM(time) {
+	var pm = " AM";
+	time = time.split(":");
+	if (time[0] > 13) {
+		time[0] -= 12;
+		pm = " PM";
+	} else if (time[0] === "00") {
+		time[0] = 12;
+	} else {
+		//remove leading 0
+		time[0] = time[0].substr(1);
+	}
+	return time.join(":") + pm;
+}
+
+function getDate(timestamp) {
+    var d = new Date(timestamp);
+    
+    var month = String(d.getMonth()+1);
+    month = month.length > 1 ? month : '0' + month;
+    
+    var day = String(d.getDate());
+    day = day.length > 1 ? day : '0' + day;
+    
+    var year = String(d.getFullYear());
+    
+    return [year, month, day].join("-");
+}
+
+function isNumberKey(evt){
+    var charCode = (evt.which) ? evt.which : event.keyCode
+    if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+    	return false;
+    }
+    return true;
+}
+
+function checkAdd() {
+	$("#dvrInput").removeAttr("class");
+    if ($("#dateInput").val() !== "" && $("#startInput").val() !== "" 
+    		&& $("#endInput").val() !== "" && $("#channelInput").val() > 0) {
+        $("#dvrAdd").removeClass("disabled");
+    } else {
+        $("#dvrAdd").addClass("disabled");
+    }
+}
+
+function validInput() {
+    console.log("test");
+    var current = new Date();
+    
+    var date = $("#dateInput").val();
+    var start = $("#startInput").val();
+    var end = $("#endInput").val();
+    
+    var dateCheck = date.split("-");
+    if (dateCheck.length !== 3 
+    		|| dateCheck[0].length !== 4 || isNaN(dateCheck[0])
+    		|| dateCheck[1].length !== 2 || isNaN(dateCheck[1])
+    		|| dateCheck[2].length !== 2 || isNaN(dateCheck[2])) {
+    	$("#dvrInput").addClass("error-date");
+        return false;
+    }
+    
+    var startCheck = start.split(":");
+    if (startCheck.length !== 2 
+    		|| startCheck[0].length !== 2 || isNaN(startCheck[0])
+            || startCheck[1].length !== 2 || isNaN(startCheck[1])) {
+        $("#dvrInput").addClass("error-time");
+        return false;
+    }
+    var endCheck = end.split(":");
+    if (endCheck.length !== 2 
+    		|| endCheck[0].length !== 2 || isNaN(endCheck[0])
+            || endCheck[1].length !== 2 || isNaN(endCheck[1])) {
+        $("#dvrInput").addClass("error-time");
+        return false;
+    }
+    
+    //schedule invalid
+    if (start >= end) {
+        $("#dvrInput").addClass("error-invalid");
+        return false;
+    }   
+    
+    var startTimestamp = dateToTimestamp(date, start);
+    var endTimestamp = dateToTimestamp(date, end);
+    
+    //schedule in past
+    if (current.getTime() > endTimestamp) {
+    	$("#dvrInput").addClass("error-past");
+        return false;
+    }
+    
+    var loop = true;
+    //schedule overlap
+    $.each( $("#scheduleItems .dvrItem"), function(key, value) {
+    	var start = $(value).data("start");
+    	var end = $(value).data("end");
+
+    	if ((startTimestamp <= start && endTimestamp <= start)
+    			||(startTimestamp >= end && endTimestamp >= end)) {
+    		//true
+    	} else {
+            $("#dvrInput").addClass("error-overlap");
+            //custom pulse effect
+            pulse(value);
+            loop = false;
+            return;
+    	}
+
+    });
+    return loop;
+}
+
+function sortByDate(array) {
+	return array.sort(function(a, b) {
+        var x = $(a).data("start"); var y = $(b).data("start");
+        return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+});
+}
+
+function pulse(item) {
+	$(item).delay(200).fadeOut('slow').fadeIn('slow');
+}
+
+
+</script>
+</body>
+</html>
