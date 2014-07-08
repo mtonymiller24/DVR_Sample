@@ -295,6 +295,11 @@ $(document).ready(function(){
 	    $("#endInput").val(getTime(end));
 	    
 	    $("#channelInput").val($(".itemChannel", $(par)).html());
+
+
+
+	     var top = $(par).offset().top - 45;
+  	     $(par).animate({bottom:top}, 500).css("border-top", "1px solid #444");
 		
 		deleteItem(par);
 
