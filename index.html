@@ -363,7 +363,7 @@ function militaryToPM(time) {
 		pm = " PM";
 	} else if (time[0] === "00") {
 		time[0] = 12;
-	} else {
+	} else if (time[0] < 10) {
 		//remove leading 0
 		time[0] = time[0].substr(1);
 	}
